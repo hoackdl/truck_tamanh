@@ -1,0 +1,8 @@
+build:
+  packages:
+    - libxml2-dev
+    - libxslt1-dev
+    - libjpeg-dev
+    - zlib1g-dev
+    - libfreetype6-dev
+    - python3-dev
