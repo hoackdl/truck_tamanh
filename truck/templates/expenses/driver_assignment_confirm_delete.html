@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Xác nhận xoá gán lái xe</h2>
+
+<p>Bạn có chắc chắn muốn xoá gán lái xe của <strong>{{ assignment.driver.name }}</strong> với xe <strong>{{ assignment.vehicle.license_plate }}</strong> không?</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">Xoá</button>
+  <a href="{% url 'driver_assignment_list' %}" class="btn btn-secondary">Hủy</a>
+</form>
+
+{% endblock %}

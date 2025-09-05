@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+
+
+<div class="container py-4">
+    <div class="row">
+    <!-- Main content 3/4 -->
+    <div class="col-md-9">
+  <div class="card shadow rounded-4 border-0">
+    <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex gap-2">
+      <div class="d-flex gap-2">
+        <a class="btn btn-light" href="{% url 'expense_create' %}">➕ Thêm</a>
+        <a class="btn btn-success" href="{% url 'expense_report' %}">📊 Xem báo cáo</a>
+
+        {% if request.user.is_superuser %}
+        <a class="btn btn-success" href="{% url 'driver_assignment_list' %}">📊 Điều xe</a>
+        <a class="btn btn-success" href="{% url 'driver_list' %}">📊 Lái xe</a>
+        <a class="btn btn-success" href="{% url 'vehicle_list' %}">📊 Xe</a>
+        {% endif %}
+
+
+      </div>
+      </div>
+      <h4 class="mb-0">🧾 Bảng lịch trình</h4>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-striped m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Thực hiện</th>
+              <th>Biển số</th> <!-- ✅ thêm dòng này -->
+
+              <th>Ngày</th>
+              <th>Người tạo</th>
+              <th>Điểm nhận</th>
+              <th>Điểm giao</th>
+              <th class="text-end">Có phiếu</th>
+              <th class="text-end">Không phiếu</th>
+              
+              
+              <th class="text-end">Ứng/Thu khách</th>
+              <th class="text-end">Phụ cấp</th>
+              <th class="text-end">KM trên xe</th>
+              <th>Ghi chú</th>
+              <th class="text-center">Thao tác</th> <!-- ✅ -->
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in entries %}
+            <tr>
+              <td>{{ entry.get_payer_type_display }}</td>
+              <td>
+                {% if entry.vehicle %}
+                  {{ entry.vehicle.license_plate }}
+                {% else %}
+                  <span class="text-danger">⚠️ Không có xe</span>
+                {% endif %}
+              </td>
+
+              <td>{{ entry.date|date:"d/m/Y" }}</td>
+              <td>{{ entry.user.username }}</td>
+              <td>{{ entry.pickup_location }}</td>
+              <td>{{ entry.delivery_location }}</td>
+              <td class="text-end">{{ entry.with_receipt_amount|intcomma }}</td>
+              <td class="text-end">{{ entry.without_receipt_amount|intcomma }}</td>
+              
+              
+
+              <td class="text-end">{{ entry.advance_or_customer_payment|intcomma }}</td>
+              <td class="text-end">{{ entry.allowance|intcomma }}</td>
+              <td class="text-end">{{ entry.km_on_vehicle|intcomma }}</td>
+              <td>{{ entry.notes }}</td>
+
+              
+              <td class="text-center d-flex gap-1 justify-content-center">
+                <a href="{% url 'expense_edit' entry.id %}" class="btn btn-sm btn-warning">
+                  ✏️
+                </a>
+                <a href="{% url 'expense_delete' entry.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xoá?')">
+                  🗑
+                </a>
+                
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="13" class="text-center text-muted py-3">Không có dữ liệu</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+ <!-- Sidebar 1/4 -->
+    <div class="col-md-3">
+      <div class="card shadow rounded-4 border-0 p-3">
+        <h5>Lọc dữ liệu</h5>
+
+        <form method="get" action="">
+          <div class="mb-3">
+            <label for="from_date" class="form-label">Từ ngày</label>
+            <input type="date" class="form-control" id="from_date" name="from_date" value="{{ request.GET.from_date }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="to_date" class="form-label">Đến ngày</label>
+            <input type="date" class="form-control" id="to_date" name="to_date" value="{{ request.GET.to_date }}">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mb-3">Lọc</button>
+        </form>
+
+        <form method="get" action="{% url 'expense_export_excel' %}">
+          <input type="hidden" name="from_date" value="{{ request.GET.from_date }}">
+          <input type="hidden" name="to_date" value="{{ request.GET.to_date }}">
+          <button type="submit" class="btn btn-success w-100">Xuất Excel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

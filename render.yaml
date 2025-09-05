@@ -1,0 +1,57 @@
+services:
+  - type: web
+    name: truck-tamanh
+    env: python
+    plan: free
+
+    buildCommand: |
+      pip install -r requirements.txt
+
+    releaseCommand: |
+      echo "🚀 Running migrations..."
+      python manage.py migrate --noinput
+      echo "👤 Ensuring superuser..."
+      python manage.py shell -c "
+from django.contrib.auth import get_user_model
+import os
+User = get_user_model()
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+if username and password:
+    if not User.objects.filter(username=username).exists():
+        User.objects.create_superuser(username=username, email=email, password=password)
+        print(f'✅ Superuser {username} created')
+    else:
+        print(f'ℹ️ Superuser {username} already exists')
+else:
+    print('⚠️ Missing superuser env vars')
+"
+
+    startCommand: |
+      gunicorn truck.wsgi:application --bind 0.0.0.0:$PORT
+
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: truck.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "truck-tamanh.onrender.com,localhost,127.0.0.1"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: tamanhlogistics@gmail.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: Admin123!
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: DATABASE_URL
+        value: postgresql://postgres:Admin123!@database-1.c4d0woooat0d.us-east-1.rds.amazonaws.com:5432/truckdb
+
+    disk:
+      name: media
+      mountPath: /opt/render/project/src/media
+      sizeGB: 1
