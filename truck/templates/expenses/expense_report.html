@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<div class="container py-4">
+  <div class="card shadow rounded-4 border-0">
+    <div class="card-header bg-success text-white rounded-top-4">
+      <form method="get" class="row g-2 align-items-center">
+
+        {% if is_admin %}
+        <div class="col-auto">
+          <label class="form-label mb-0">Người dùng:</label>
+          <select name="user" class="form-select">
+            <option value="">-- Tất cả --</option>
+            {% for user in users %}
+              <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_user_id|stringformat:"s" %}selected{% endif %}>
+                {{ user.username }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <div class="col-auto">
+          <label class="form-label mb-0">Từ ngày:</label>
+          <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+        </div>
+
+        <div class="col-auto">
+          <label class="form-label mb-0">Đến ngày:</label>
+          <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+        </div>
+
+        <div class="col-auto">
+          <label class="form-label mb-0 d-block">&nbsp;</label>
+          <button class="btn btn-light">🔍 Xem</button>
+          <a href="{% url 'expense_list' %}" class="btn btn-secondary">
+            ⬅️ Quay lại danh sách
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="px-3 py-2">
+        {% if start_date or end_date %}
+          <div class="alert alert-info py-2 mb-3">
+            <strong>Khoảng thời gian:</strong>
+            {% if start_date %} từ <strong>{{ start_date|date:"d/m/Y" }}</strong>{% endif %}
+            {% if end_date %} đến <strong>{{ end_date|date:"d/m/Y" }}</strong>{% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered m-0">
+          <thead class="table-light">
+            <tr>
+              <th>Lái xe</th>
+              <th class="text-end">Có phiếu</th>
+              <th class="text-end">Không phiếu</th>
+              <th class="text-end">Ứng / Thu khách</th>
+               <th class="text-end">Tồn cuối</th>  <!-- ✅ Thêm cột này -->
+              <th class="text-end">Phụ cấp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if totals_by_user %}
+              {% for row in totals_by_user %}
+              <tr>
+                <td>{{ row.user__username }}</td>
+                <td class="text-end">{{ row.total_with|default:0|intcomma }}</td>
+                <td class="text-end">{{ row.total_without|default:0|intcomma }}</td>
+                <td class="text-end">{{ row.total_advance|default:0|intcomma }}</td>
+                  <td class="text-end">{{ row.remaining|default:0|intcomma }}</td>  <!-- ✅ Thêm cột này -->
+                <td class="text-end">{{ row.total_allowance|default:0|intcomma }}</td>
+              </tr>
+              {% endfor %}
+
+              <tr class="fw-bold bg-light">
+                <td class="text-center">Tổng cộng</td>
+                <td class="text-end">{{ totals.total_with|default:0|intcomma }}</td>
+                <td class="text-end">{{ totals.total_without|default:0|intcomma }}</td>
+                <td class="text-end">{{ totals.total_advance|default:0|intcomma }}</td>
+                
+                <td class="text-end">{{ totals.total_allowance|default:0|intcomma }}</td>
+                  <td></td> <!-- Trống ở dòng tổng -->
+              </tr>
+
+
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-3">Không có dữ liệu</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

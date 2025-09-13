@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'expense_list' %}" class="btn btn-secondary mb-4">
+    ⬅️ Quay lại danh sách
+  </a>
+
+  <div class="card shadow-sm p-4 rounded-4 border-primary mb-5">
+    <h5 class="card-title mb-3">🚚 Gán lái xe vào xe</h5>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        {{ form.as_p }}
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg">💾 Lưu</button>
+    </form>
+  </div>
+
+  <h4 class="mb-3">📋 Lịch sử gán</h4>
+  <div class="table-responsive shadow rounded">
+    <table class="table table-hover table-bordered table-striped align-middle mb-0">
+      <thead class="table-primary">
+        <tr>
+          <th>Lái xe</th>
+          <th>Xe</th>
+          <th>Bắt đầu</th>
+          <th>Kết thúc</th>
+          <th>Điều chỉnh</th>
+        </tr>
+      </thead>
+      <tbody>
+  {% for a in assignments %}
+  <tr>
+    <td>{{ a.driver.name }}</td>
+    <td>{{ a.vehicle.license_plate }}</td>
+    <td>{{ a.start_date|date:"d/m/Y" }}</td>
+    <td>
+      {% if a.end_date %}
+        {{ a.end_date|date:"d/m/Y" }}
+      {% else %}
+        <span class="text-success">Hiện tại</span>
+      {% endif %}
+    </td>
+    <td>
+      <a href="{% url 'driver_assignment_edit' a.pk %}" class="btn btn-sm btn-warning">Sửa</a>
+      <a href="{% url 'driver_assignment_delete' a.pk %}" class="btn btn-sm btn-danger">Xoá</a>
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="5" class="text-center text-muted">Không có dữ liệu</td></tr>
+  {% endfor %}
+</tbody>
+
+    </table>
+  </div>
+</div>
+{% endblock %}

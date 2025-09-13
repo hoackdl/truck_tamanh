@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+
+<div class="container py-4">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card shadow-lg rounded-4 border-0">
+
+        <!-- Header -->
+<div class="card-header bg-primary text-white rounded-top-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 w-100">
+
+    <!-- Tiêu đề -->
+    <h4 class="mb-0">🧾 Bảng lịch trình</h4>
+
+    <!-- Nhóm nút -->
+    <div class="btn-group gap-2">
+      <a class="btn btn-light" href="{% url 'expense_create' %}">➕ Thêm</a>
+      <a class="btn btn-success" href="{% url 'expense_report' %}">📊 Báo cáo</a>
+
+      {% if request.user.is_superuser %}
+      <a class="btn btn-outline-light" href="{% url 'driver_assignment_list' %}">🚚 Điều xe</a>
+      <a class="btn btn-outline-light" href="{% url 'driver_list' %}">👨‍✈️ Lái xe</a>
+      <a class="btn btn-outline-light" href="{% url 'vehicle_list' %}">🚘 Xe</a>
+      {% endif %}
+    </div>
+
+<!-- Form lọc -->
+<form method="get" action=""
+      class="d-flex align-items-center gap-2 bg-white p-2 rounded">
+  <input type="date" class="form-control form-control-sm w-auto"
+         name="from_date" value="{{ request.GET.from_date }}">
+  <input type="date" class="form-control form-control-sm w-auto"
+         name="to_date" value="{{ request.GET.to_date }}">
+  <button type="submit" class="btn btn-sm btn-primary">Lọc</button>
+  <a href="{% url 'expense_list' %}" class="btn btn-sm btn-secondary">Reset</a>
+  <button type="submit" formaction="{% url 'expense_export_excel' %}"
+          class="btn btn-sm btn-success">Xuất Excel</button>
+</form>
+
+
+  </div>
+</div>
+
+<form method="post" action="">
+  {% csrf_token %}
+  <div class="table-responsive">
+    <table class="table table-hover table-striped m-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th><input type="checkbox" id="select-all"></th> <!-- ✅ Checkbox tổng -->
+          <th>Thực hiện</th>
+          <th>Biển số</th>
+          <th>Ngày</th>
+          <th>Người tạo</th>
+          <th>Điểm nhận</th>
+          <th>Điểm giao</th>
+          <th class="text-end">Có phiếu</th>
+          <th class="text-end">Không phiếu</th>
+          <th class="text-end">Ứng/Thu khách</th>
+          <th class="text-end">Phụ cấp</th>
+          <th class="text-end">KM trên xe</th>
+          <th>Ghi chú</th>
+          <th class="text-center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in page_obj %}
+        <tr>
+          <td><input type="checkbox" name="selected_ids" value="{{ entry.id }}"></td>
+          <td>{{ entry.get_payer_type_display }}</td>
+          <td>
+            {% if entry.vehicle %}
+              <span class="badge bg-info text-dark">{{ entry.vehicle.license_plate }}</span>
+            {% else %}
+              <span class="text-danger">⚠️ Không có xe</span>
+            {% endif %}
+          </td>
+          <td>{{ entry.date|date:"d/m/Y" }}</td>
+          <td><span class="badge bg-secondary">{{ entry.user.username }}</span></td>
+          <td>{{ entry.pickup_location }}</td>
+          <td>{{ entry.delivery_location }}</td>
+          <td class="text-end">{{ entry.with_receipt_amount|intcomma }}</td>
+          <td class="text-end">{{ entry.without_receipt_amount|intcomma }}</td>
+          <td class="text-end">{{ entry.advance_or_customer_payment|intcomma }}</td>
+          <td class="text-end">{{ entry.allowance|intcomma }}</td>
+          <td class="text-end">{{ entry.km_on_vehicle|intcomma }}</td>
+          <td>{{ entry.notes }}</td>
+          <td class="text-center d-flex gap-1 justify-content-center">
+            <a href="{% url 'expense_edit' entry.id %}" class="btn btn-sm btn-warning">✏️</a>
+            <a href="{% url 'expense_delete' entry.id %}" class="btn btn-sm btn-danger"
+               onclick="return confirm('Bạn có chắc chắn muốn xoá?')">🗑</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="14" class="text-center text-muted py-3">Không có dữ liệu</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Nút xoá toàn bộ -->
+  <div class="p-3">
+    <button type="submit" class="btn btn-danger"
+            onclick="return confirm('Bạn có chắc chắn muốn xoá các mục đã chọn?')">
+      🗑 Xoá toàn bộ mục đã chọn
+    </button>
+  </div>
+</form>
+
+<script>
+  // Checkbox chọn tất cả
+  document.getElementById('select-all').addEventListener('change', function(e) {
+    const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    checkboxes.forEach(cb => cb.checked = e.target.checked);
+  });
+</script>
+
+        <!-- Footer -->
+        <div class="card-footer bg-light">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">« First</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">‹ Prev</a>
+              </li>
+              {% endif %}
+
+              <li class="page-item disabled">
+                <a class="page-link">Trang {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</a>
+              </li>
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">Next ›</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">Last »</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

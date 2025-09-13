@@ -1,0 +1,135 @@
+{% load static %}
+{% load widget_tweaks %}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lịch chạy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container-fluid my-4 px-3">
+  <div class="card shadow rounded-4">
+    <div class="card-header bg-primary text-white fw-bold">
+      📝 Lịch chạy
+    </div>
+              <a href="{% url 'expense_list' %}" class="btn btn-secondary">
+              ⬅️ Quay lại danh sách
+        </a>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+
+          <div class="col-12">
+            <label for="{{ form.date.id_for_label }}" class="form-label">Ngày</label>
+            {{ form.date|add_class:"form-control" }}
+          </div>
+          <div class="mb-3">
+            {{ form.driver.label_tag }}
+            {{ form.driver }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.vehicle.license_plate }}
+            {{ form.vehicle }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Điểm nhận hàng</label>
+            {{ form.pickup_location|add_class:"form-control" }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Điểm giao hàng</label>
+            {{ form.delivery_location|add_class:"form-control" }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Thực hiện</label>
+            {{ form.payer_type|add_class:"form-select" }}
+          </div>
+
+          <div class="col-md-6 col-12">
+            <label class="form-label">Có phiếu (VNĐ)</label>
+            {{ form.with_receipt_amount|add_class:"form-control price-format" }}
+          </div>
+
+          <div class="col-md-6 col-12">
+            <label class="form-label">Không phiếu (VNĐ)</label>
+            {{ form.without_receipt_amount|add_class:"form-control price-format" }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Loại chi phí</label>
+            {{ form.cost_type|add_class:"form-select" }}
+          </div>
+
+
+
+          <div class="col-12">
+            <label class="form-label">Phụ cấp</label>
+            {{ form.allowance|add_class:"form-control price-format" }}
+          </div>
+
+          <div class="col-md-6 col-12">
+            <label class="form-label">KM trên xe</label>
+            {{ form.km_on_vehicle|add_class:"form-control price-format" }}
+          </div>
+
+          <div class="col-md-6 col-12">
+            <label class="form-label">Thu khách / Ứng tiền (VNĐ)</label>
+            {{ form.advance_or_customer_payment|add_class:"form-control price-format" }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Ghi chú</label>
+            {{ form.notes|add_class:"form-control" }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Ảnh</label>
+            <input type="file" name="receipt_images" multiple class="form-control" accept="image/*">
+          </div>
+
+          <div class="col-12 d-flex justify-content-between">
+            {% if entry %}
+              {% for image in entry.receipt_images.all %}
+                <img src="{{ image.image.url }}" alt="Biên nhận" style="max-height: 150px;" class="me-2">
+              {% endfor %}
+            {% endif %}
+            <a href="{% url 'expense_list' %}" class="btn btn-secondary">
+              ⬅️ Quay lại danh sách
+            </a>
+            <button type="submit" class="btn btn-primary">
+              💾 Lưu
+            </button>
+          </div>
+        
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function formatCurrencyInput(input) {
+    let value = input.value.replace(/[^\d]/g, '');
+    if (value) {
+      input.value = Number(value).toLocaleString('vi-VN');
+    }
+  }
+
+  document.querySelectorAll('.price-format').forEach(input => {
+    input.addEventListener('input', () => formatCurrencyInput(input));
+    input.form.addEventListener('submit', function () {
+      input.value = input.value.replace(/\./g, '').replace(/,/g, '');
+    });
+  });
+</script>
+
+</body>
+</html>
